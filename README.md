@@ -55,7 +55,7 @@ Currently, the following algorithms are available:
 The env tag should correspond to a configuration in ``configs/env/`` where you can specify the env and its hyperparameters.
 
 Currently the following envs are implemented :
-- `toy` : A simple deterministic bandit problem
+- `toy` : A simple deterministic bandit problem (for testing purposes)
 - `flappy` : The tabular version of the Flappy Bird game, where the state is the vertical and horizontal distance to the next pipe, and the action is to jump or not
 
 
