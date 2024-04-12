@@ -1,0 +1,53 @@
+name: SARSA Lambda
+config:
+  
+  # ============== Hyperparameters ==============
+  # The learning rate
+  learning_rate: 0.1
+
+  # The discount factor
+  gamma : 0.99
+
+  # The lambda parameter
+  lmbda : 0.9
+
+  # Whether to do replacing traces
+  do_replacing_traces : True
+
+  # The threshold below with the traces are deleted, in [0 1[.
+  threshold_deletion_traces : 0.
+
+  # ============== Q Values Model ==============
+  q_model:
+    class_string: "src.learners.tabular:QValuesTabularLearner"
+    method_q_value_initialization : random
+    typical_return : 1.0
+    typical_return_std : 1.0
+
+  # ============== Exploration ==============
+  # The method for the exploratory policy. Either "eps_greedy", "boltzmann", "ucb",
+  method_exploration : boltzmann
+
+  # The UCB constant (if method_exploration is UCB)
+  ucb_constant : 2.0
+
+  # The boltzmann temperature (if method_exploration is boltzmann)
+  boltzmann_temperature:
+    class_string : "src.schedulers:Exponential"
+    start_value : 10.0
+    end_value : 0.01
+    n_steps : ${n_steps_exploration}
+
+  # The epsilon parameter (if method_exploration is eps_greedy)
+  # epsilon : 0.1
+  epsilon:
+    class_string : "src.schedulers:Exponential"
+    start_value : 1.0
+    end_value : 0.1
+    n_steps : 5000
+    lower_bound : 0.1
+  
+  # ============== Logging ==============
+  do_log_q_values : False
+  n_max_q_values_states_to_log : 1
+  do_log_actions_chosen : False

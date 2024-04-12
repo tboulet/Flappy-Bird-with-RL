@@ -9,12 +9,15 @@ black
 
 # Logging
 wandb
-tensorboardX
 tensorboard
+tensorboardX
 
 # Utils
 matplotlib 
 tqdm
 
-# Common libraries
+# ML libraries
 numpy
+scipy
+gym==0.25
+git+https://gitlab-research.centralesupelec.fr/stergios.christodoulidis/text-flappy-bird-gym.git

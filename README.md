@@ -1,142 +1,93 @@
-# research-project-template
-A template repository, for the objective of combining research and good code practice.
+# RL for Flappy Bird
 
--   [**Code structure and modularity**](#repository-structure)
--   [**Virtual environment**](#virtual-environment)
--   [**Configuration system (Hydra)**](#configuration-system)
--   [**Logging (tensorboard, WandB, command line)**](#logging)
--   [**Other tips (macros, ...)**](#macros)
+A framework for RL on Flappy Bird.
 
-# Repository structure
-The repository is structured as follows. Each point is detailed below.
-```
-├── README.md        <- The top-level README for developers using this project
-├── configs         <- Configuration files for Hydra. The subtree is detailed below
-│ ├─ solver        <- Configuration files for the solver (algorithms? models?, agents?)
-│ ├─ task          <- Configuration files for the task (environments?, datasets?)
-│ ├─ config_default.yaml  <- Default configuration file
-│ └─ personal_config.yaml   <- Your personal configuration file, ignored by git and that you can change as you wish for debugging
-├── src             <- Source code for use in this project
-├── data            <- Data folder, ignored by git
-├── logs           <- Logs folder, ignored by git (tensorboard?, wandb, CSVs, ...)
-├── tensorboard    <- Tensorboard logs folder, ignored by git
-├── venv           <- Virtual environment folder, ignored by git
-├── requirements.txt  <- The requirements file for reproducing the analysis environment
-├── LICENSE        <- License file
-├── run.py         <- Main script to run the code
-└── personal_files <- Personal files, ignored by git (e.g. notes, debugging test scripts, ...)
-```
+This was done in the tabular settings in the context of the course "Reinforcement Learning" at CentraleSupélec.
 
-The main point in this architecture is that you combine agnostically solvers, tasks, and metrics. You could add, change or remove those concepts if they don't fit your training paradigm. 
+Code by Timothé Boulet.
 
-For the solver, for example, you can easily add a new solver by adding a new file (in the `./solver/` folder advised), implement a class with a `.fit(x_data : np.ndarray)` method, add the mapping between a solver tag and the class in the `./solver/__init__.py` file, and add the configuration file in the `./configs/solver/` folder.
 
-The same goes for the task, and the metrics. This will allow you to easily compare different solvers, tasks, and metrics, and to easily add new ones, which is an excellent way of doing a research project.
+# Installation
 
-# Virtual environment
-
-For the sake of reproducibility, and to avoid conflicts with other projects, it is recommended to use a virtual environment. 
-
-There are several ways to create a virtual environment. A good one is Virtual Env.
-
-The following commands create a virtual environment named ``./venv/`` and install the requirements.
+Clone the repository, create a venv (advised), and install the requirements:
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # for linux
-venv\Scripts\activate.bat  # for windows
+git clone git@github.com:tboulet/Flappy-Bird-with-RL.git
+cd Flappy-Bird-with-RL
+python -m venv venv
+source venv/bin/activate  # on linux
+venv\Scripts\activate  # on windows
 pip install -r requirements.txt
 ```
 
-# Configuration system
 
-For a clean way of interacting with the code, it is advised to implement a Command Line Interface (CLI) and a configuration system. A simple approach is to use the ``argparse``, but I suggest to use [Hydra](https://hydra.cc/). Hydra is a framework that allows to easily create a CLI and a configuration system. It is very powerful and flexible, and allows to create a configuration tree.
-
-On this project for example, you can use the following command to run the code with the configuration `personal_config` in the `configs` folder.
-
-```bash
-python run.py --config-name personal_config
-```
-
-Or run the code with the default configuration but with a certain solver on a certain task :
+# Run the code
+ 
+For training your algorithms on a certain env, run the following command:
 
 ```bash
-python run.py solver=linear task=brownian
+python run.py algo=<algo tag> env=<env tag>
 ```
 
-You can also modify config parameters of the configuration file by using the following command :
+For example, to train the Monte Carlo algorithm on the Flappy Bird environment:
 
 ```bash
-python run.py solver=linear task=brownian solver.lr=0.01
+python run.py algo=mc env=flappy
 ```
 
+We use Hydra as our config system. The config folder is `./configs/`. You can modify the config (logging, metrics, number of training episodes) from the `default_config.yaml` file. You can also create your own config file and specify it with the `--config-name` argument :
 
-# Logging 
+```bash
+python run.py algo=mc env=flappy --config-name=my_config_name
+```
 
-Logging is a very important part of a project. It allows to keep track of the experiments, to debug, to compare the results, to reproduce the results, etc.
+Advice : create an alias for the command above this.
+# Algorithms
+The algo tag should correspond to a configuration in ``configs/algo/`` where you can specify the algo and its hyperparameters. 
+
+Currently, the following algorithms are available:
+ - `random` : Random policy, a baseline that selects actions uniformly at random
+ - `sarsa_l` : SARSA(lambda), an improvement of SARSA that uses eligibility traces to update the Q-values. It is a trade-off between the bias of one-step returns (Q Learning and SARSA) and the variance of Monte-Carlo returns, but more flexible than N-step returns
+ - `mc` : Monte-Carlo, a model-free reinforcement learning algorithm that learns the optimal policy by estimating the Q-values with Monte-Carlo returns
+
+# Environments
+
+The env tag should correspond to a configuration in ``configs/env/`` where you can specify the env and its hyperparameters.
+
+Currently the following envs are implemented :
+- `toy` : A simple deterministic bandit problem
+- `flappy` : The tabular version of the Flappy Bird game, where the state is the vertical and horizontal distance to the next pipe, and the action is to jump or not
+
+
+# Visualisation and results
 
 ### WandB
 WandB is a very powerful tool for logging. It is flexible, logs everything online, can be used to compare experiments or group those by dataset or algorithm, etc. You can also be several people to work on the same project and share the results directly on line. It is also very easy to use, and can be used with a few lines of code.
 
-The metrics will be logged in the project `wandb_config['project']` with entity `wandb_config['entity']`.
-
-Cons : it can sometimes be slow to start. It also makes the CTRL+C command buggy sometimes.
+If `do_wandb` is True, the metrics will be logged in the project `wandb_config['project']` with entity `wandb_config['entity']`, and you can visualize the results on the WandB website.
 
 ### Tensorboard
-Tensorboard is a tool from Tensorflow that allows to visualize the training. It is usefull during the development phase, to check that everything is working as expected. It is also very easy to use, and can be used with a few lines of code.
+Tensorboard is a tool that allows to visualize the training. It is usefull during the development phase, to check that everything is working as expected. It is also very easy to use, and can be used with a few lines of code.
 
-You can visualize the logs by running the following command in the terminal.
+If `do_tb` is True, you can visualize the logs by running the following command in the terminal.
 ```bash
 tensorboard --logdir=tensorboard
 ```
 
-Cons : it does not log everything online, and it is hard to compare experiments.
+### CLI
 
-### CSV
-CSV files are a simple way to log the results. It is good practice to log the results in a CSV file, be it for using the results later.
+You can also visualize the results in the terminal. If `do_cli` is True, the metrics will be printed in the terminal every `cli_frequency_episode` episodes.
 
-Cons : it is hard to compare experiments, and it is not very flexible.
+# Other
 
-# Macros
+### Seed
 
-Command line macros are extremely useful to avoid typing the same commands over and over again. This is just a small tip that I like to do, but it can save a lot of time.
+You can specify the seed of the experiment with the `seed` argument. If you don't specify it, the seed will be randomly chosen.
 
-#### Linux
+### cProfile and SnakeViz
 
-On Linux, you can create a macro by adding lines in the file ``~/.bashrc``. For example, the following lines create a macro to create the virtual environment and, one to run the code with my personal configuration.
-
-```bash
-alias venv="python3 -m venv venv && source venv/bin/activate"
-alias run="python run.py --config-name personal_config"
-```
-
-#### Windows
-On Windows, one method that worked well was to follow this StackOverflow [answer](https://superuser.com/questions/1134368/create-permanent-doskey-in-windows-cmd#:~:text=Create%20a%20file%20to%20store%20your%20macros%20(DOSKEYs).) by the user John DeBord.
-
-Some windows macros that i use can be found in the `usefull_files_for_a_project/macros.doskey` file.
-
-# Personal files
-
-I advice to use files gitignored (there is a `personal_*` field in the `.gitignore` file) to store personal files, such as notes, debugging scripts, etc. It is a good practice to keep the repository clean and organized.
-
-# cProfile and SnakeViz
-
-cProfile is a module that allows to profile the code. It is very useful to find bottlenecks in the code, and to optimize it. As a developer that wants to optimize the speed of its code, your only criteria for 'how make my code faster' should be how much time the program spend on this function. Note : this is not necessarily the most frequent function.
-
-You can use cProfile by adding the following lines in your code.
-
-```python
-import cProfile
-with cProfile.Profile() as pr:
-    main()  # your code, here it is the main function
-pr.print_stats()
-pr.dump_stats('logs/profile.prof')
-```
-
-SnakeViz is a tool that allows to visualize the results of cProfile and so what you should focus. It is used through the terminal.
+cProfile is a module that allows to profile the code. It is very useful to find bottlenecks in the code, and to optimize it. SnakeViz is a tool that allows to visualize the results of cProfile and so what you should focus. It is used through the terminal :
 
 ```bash
-snakeviz logs/profile.prof
+snakeviz logs/profile_stats.prof
 ```
-
-In development phase, I often create a macro that run the code with my personal config and then run the snakeviz command for visualizing the profiling results.
